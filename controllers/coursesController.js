@@ -1,52 +1,64 @@
-let { courses } = require('../data/courses')
+let Course = require('../model/coursesModel')
 const {validationResult } = require('express-validator')
-const deleteCourse = (req, res)=>{
-    const courseId = +req.params.id;
-    courses = courses.filter((el)=>el.id!==courseId);
-    res.status(200).json(courses);
+
+
+const deleteCourse = async (req, res)=>{
+  try {
+    const response = await Course.deleteOne({_id : req.params.id});
+    res.status(200).json({success : true, msg : response })
+   }
+   catch(err){
+    res.send({error: err});
+   }
 }
 
-const addCourse = (req, res) => {
+const addCourse = async (req, res) => {
 
-    const {title,price} = req.body;
-    const result = validationResult(req);
- 
-    if(!result.isEmpty()){
-     return res.status(400).json(result.array())
+    const errors = validationResult(req);
+
+    if(!errors.isEmpty()){
+
+        return res.status(400).json(errors.array());
+
     }
- 
-    const course = {id:courses.length + 1 , title , price}
-    courses.push({id:courses.length + 1 , title , price});
-    res.json({course});
+
+   const newCourse  =  new Course(req.body);
+
+   await newCourse.save();
+
+   res.sendStatus(201)
  }
 
-const updateCourse = (req, res) => {
-    const courseId = +req.params.id;
+const updateCourse = async (req, res) => {
     const result = validationResult(req);
-    let course = courses.find((el)=>el.id == courseId);
     if(!result.isEmpty()){
     return res.status(400).json(result.array())
     }
-    if(!course){
-    return res.status(400).json({msg : "course not found"})
-    }
-    course = {...course, ...req.body};
-    res.status(200).json(course);
-   
+    try {
+        await Course.updateOne({_id : req.params.id}, {$set: {...req.body}});
+       res.sendStatus(201);
+     } catch(err) {
+         return res.status(400).json({error : err})
+     }
 }
 
-const getAllCourses = (req, res) => {
-    res.json({courses : courses});
+const getAllCourses =async (req, res) => {
+    const courses = await Course.find();
+    res.json({courses});
 }
 
-const getSingleCourse = (req, res) => {
-    const id = +req.params.id;
-    const course = courses.find(( el ) => el.id === id );
+const getSingleCourse = async (req, res) => {
+    try {
+   const course  = await Course.findById(req.params.id);
     if(course){
-        res.json({course : course});
+       return res.json(course);
     }else{
-       return res.status(404).json({msg : "Course no found or valid id."})
+       return res.status(404).json({msg : "Course not found"})
     }
+
+} catch(err) {
+    return res.status(400).json({msg : "Invalid object ID"})
+}
 }
 
 module.exports = {

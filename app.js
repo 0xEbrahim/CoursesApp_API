@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 3000 || process.env.PORT;
 const coursesRoutes = require('./routes/coursesRoute')
-
+require('./database/db');
 // middlewares
 app.use(express.urlencoded({extended : false}));
 app.use(express.json());
