@@ -1,7 +1,5 @@
 const mongoose = require('mongoose')
-
-const url = "mongodb+srv://root:root@learn-nodejs.6qijpbw.mongodb.net/Courses_API";
-
+const url = process.env.MONGO_URL;
 mongoose.connect(url)
 .then(()=>{
     console.log("Successfully connected to database")
@@ -9,4 +7,3 @@ mongoose.connect(url)
 .catch((err)=>{
     console.log(err)
 });
-
