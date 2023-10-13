@@ -5,66 +5,58 @@ const {
      FAIL , 
      ERROR
     } = require("../utils/httpStatusText")
+const asyncWrapper = require('../middlewares/asyncWrapper')
+const AppError= require('../utils/error')
 
-const deleteCourse = async (req, res)=>{
-  try {
+
+
+const deleteCourse = asyncWrapper(async (req, res)=>{
     await Course.deleteOne({_id : req.params.id});
     res.status(200).json({status : SUCCESS, data : null})
-   }
-   catch(err){
-    res.send({error: err});
-   }
 }
-
-const addCourse = async (req, res) => {
-
+)
+const addCourse = asyncWrapper( async (req, res, next) => {
     const errors = validationResult(req);
-
     if(!errors.isEmpty()){
-        return res.status(400).json({status : FAIL , data :errors.array()});
+        const error = AppError.create(errors.array(), 400 ,FAIL)
+        return next(error)
     }
 
    const newCourse  =  new Course(req.body);
-
    await newCourse.save();
-
    res.status(201).send({status : SUCCESS,course : {newCourse}})
- }
+ })
 
-const updateCourse = async (req, res) => {
+const updateCourse = asyncWrapper(async (req, res, next) => {
     const result = validationResult(req);
     if(!result.isEmpty()){
-    return res.status(400).json({status : FAIL , data :result.array()})
+        const error = AppError.create(result.array(), 400, FAIL)
+        return next(error);
     }
-    try {
-       const updatedCourse = await Course.updateOne({_id : req.params.id}, {$set: {...req.body}});
-       return res.status(200).send({status : SUCCESS , course : {updatedCourse}});
-     } catch(err) {
-         return res.status(400).json({status : ERROR , message :err.message,code : 400})
-     }
-} 
+    const updatedCourse = await Course.updateOne({_id : req.params.id}, {$set: {...req.body}});
+    return res.status(200).send({status : SUCCESS , course : {updatedCourse}});
+} )
 
-const getAllCourses =async (req, res) => {
+const getAllCourses =asyncWrapper(
+    async (req, res) => {
     const query = req.query;
     const limit = query.limit || 10;
     const page = query.page || 1;
     const courses = await Course.find({}, {"__v" : false}).limit(limit).skip(( page - 1 ) * limit);
     res.json({status : SUCCESS, data : {courses}});
-}
+    }
+)
 
-const getSingleCourse = async (req, res) => {
-    try {
+const getSingleCourse = asyncWrapper(async (req, res, next) => {
    const course  = await Course.findById(req.params.id);
     if(course){
-       return res.json({status : SUCCESS,data : {course}});
+       return res.json({status : SUCCESS , data : {course}});
     }else{
-       return res.status(404).json({status : FAIL, data : {course: "Course not found."}})
+        const error = AppError.create("Course not found.", 404 ,FAIL)
+        return next(error)
+        }
     }
-
-} catch(err) {
-    return res.status(400).json({status : ERROR , message : err.message, code : 400})
-}
-}
+)
 
 module.exports = {
     getSingleCourse,
