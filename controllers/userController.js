@@ -2,6 +2,7 @@ let User = require('../model/userModel');
 const asyncWrapper = require('../middlewares/asyncWrapper')
 const appError = require('../utils/error');
 const {validationResult } = require('express-validator')
+const jwt = require('jsonwebtoken');
 const {
     SUCCESS,
     FAIL,
@@ -10,6 +11,7 @@ const {
 
 const getAllUsers = asyncWrapper(
     async (req, res) => {
+       // console.log(req.headers)
         const query = req.query;
         const limit = query.limit || 10;
         const page = query.page || 1;

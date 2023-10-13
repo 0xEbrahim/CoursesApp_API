@@ -1,10 +1,11 @@
+const jwt = require('jsonwebtoken')
 const User = require('../model/userModel');
 const asyncWrapper = require('../middlewares/asyncWrapper')
 const {validationResult } = require('express-validator')
 const appError = require('../utils/error');
 const { FAIL, SUCCESS } = require('../utils/httpStatusText');
 const {hashingPassword, matchedPassword} = require('../utils/passwordHashing');
-
+const {generateToken} = require('../utils/generateJWT')
 
 const register = asyncWrapper( async (req, res, next) => {
     const result = validationResult(req);
@@ -25,9 +26,14 @@ const register = asyncWrapper( async (req, res, next) => {
     firstName,
     lastName,
     email,
-    password: hashedPassword
+    password: hashedPassword,
     });
-   await newUser.save()
+
+    // generate JWT token
+    const token = await generateToken({email:newUser.email,id:newUser._id});
+   
+    newUser.token = token;
+    await newUser.save()
    res.status(201).json({status: SUCCESS, data: {user : newUser}})
 })
 
@@ -46,7 +52,8 @@ const logIn = asyncWrapper( async (req, res, next) => {
     //console.log(user)
     const match = await matchedPassword(password, user.password);
     if(match){
-       return res.status(200).json({status:SUCCESS, data:{user:"logged-In successfully"}})
+        const token = await generateToken({email:user.email,id:user._id})
+       return res.status(200).json({status:SUCCESS, data:{token:token}})
     }else{
         const error = appError.create("Email or Password is wrong.", 500 , FAIL);
         return next(error);

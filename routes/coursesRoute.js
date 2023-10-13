@@ -7,10 +7,10 @@ const {addCourse,
     deleteCourse,
     updateCourse
     } = require('../controllers/coursesController')
-
+const { verifyToken } = require('../middlewares/verifyToken')
 router.route('/')
         .get(getAllCourses)
-        .post(coursesValidationSchema(),addCourse)
+        .post(verifyToken , coursesValidationSchema(),addCourse)
 
 
 router.route('/:id')

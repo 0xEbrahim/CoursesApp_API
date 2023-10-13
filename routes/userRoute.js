@@ -11,10 +11,10 @@ const {
     logIn,
     register
 } = require('../controllers/auth')
-
+const {verifyToken }= require('../middlewares/verifyToken')
 router.route('/register').post(userValidationSchema(),register);
 router.route('/login').post(loginSchema(),logIn)
-router.route('/').get(getAllUsers);
+router.route('/').get(verifyToken,getAllUsers);
 router.route('/id')
 .get(getUser)
 .patch(userValidationSchema(),updateUser)
