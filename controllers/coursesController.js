@@ -24,7 +24,7 @@ const addCourse = asyncWrapper( async (req, res, next) => {
 
    const newCourse  =  new Course(req.body);
    await newCourse.save();
-   res.status(201).send({status : SUCCESS,course : {newCourse}})
+   res.status(201).send({status : SUCCESS,data : {course : newCourse}})
  })
 
 const updateCourse = asyncWrapper(async (req, res, next) => {
@@ -34,7 +34,7 @@ const updateCourse = asyncWrapper(async (req, res, next) => {
         return next(error);
     }
     const updatedCourse = await Course.updateOne({_id : req.params.id}, {$set: {...req.body}});
-    return res.status(200).send({status : SUCCESS , course : {updatedCourse}});
+    return res.status(200).send({status : SUCCESS , data : {updatedCourse}});
 } )
 
 const getAllCourses =asyncWrapper(
